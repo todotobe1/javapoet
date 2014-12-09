@@ -15,6 +15,7 @@
  */
 package com.squareup.javawriter;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -40,7 +41,7 @@ public final class EnumWriter extends TypeWriter {
   }
 
   private final Map<String, ConstantWriter> constantWriters = Maps.newLinkedHashMap();
-  private final List<ConstructorWriter> constructorWriters = Lists.newArrayList();
+  private final List<MethodWriter> constructorWriters = Lists.newArrayList();
 
   EnumWriter(ClassName name) {
     super(name);
@@ -52,8 +53,9 @@ public final class EnumWriter extends TypeWriter {
     return constantWriter;
   }
 
-  public ConstructorWriter addConstructor() {
-    ConstructorWriter constructorWriter = new ConstructorWriter(name.simpleName());
+  public MethodWriter addConstructor() {
+    MethodWriter constructorWriter =
+        new MethodWriter(Optional.<TypeName>absent(), name.simpleName());
     constructorWriters.add(constructorWriter);
     return constructorWriter;
   }
@@ -85,7 +87,7 @@ public final class EnumWriter extends TypeWriter {
     for (VariableWriter fieldWriter : fieldWriters.values()) {
       fieldWriter.write(new IndentingAppendable(appendable), context).append("\n");
     }
-    for (ConstructorWriter constructorWriter : constructorWriters) {
+    for (MethodWriter constructorWriter : constructorWriters) {
       appendable.append('\n');
       if (!isDefaultConstructor(constructorWriter)) {
         constructorWriter.write(new IndentingAppendable(appendable), context);
@@ -106,7 +108,7 @@ public final class EnumWriter extends TypeWriter {
   private static final Set<Modifier> VISIBILIY_MODIFIERS =
       Sets.immutableEnumSet(PUBLIC, PROTECTED, PRIVATE);
 
-  private boolean isDefaultConstructor(ConstructorWriter constructorWriter) {
+  private boolean isDefaultConstructor(MethodWriter constructorWriter) {
     return Sets.intersection(VISIBILIY_MODIFIERS, modifiers)
         .equals(Sets.intersection(VISIBILIY_MODIFIERS, constructorWriter.modifiers))
         && constructorWriter.body().isEmpty();

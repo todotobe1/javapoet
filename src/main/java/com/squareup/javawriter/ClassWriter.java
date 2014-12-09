@@ -39,7 +39,7 @@ public final class ClassWriter extends TypeWriter {
   }
 
   private Optional<TypeName> supertype;
-  private final List<ConstructorWriter> constructorWriters;
+  private final List<MethodWriter> constructorWriters;
   private final List<TypeVariableName> typeVariables;
 
   ClassWriter(ClassName className) {
@@ -60,8 +60,9 @@ public final class ClassWriter extends TypeWriter {
     setSupertype(ClassName.fromTypeElement(typeElement));
   }
 
-  public ConstructorWriter addConstructor() {
-    ConstructorWriter constructorWriter = new ConstructorWriter(name.simpleName());
+  public MethodWriter addConstructor() {
+    MethodWriter constructorWriter =
+        new MethodWriter(Optional.<TypeName>absent(), name.simpleName());
     constructorWriters.add(constructorWriter);
     return constructorWriter;
   }
@@ -89,7 +90,7 @@ public final class ClassWriter extends TypeWriter {
     for (VariableWriter fieldWriter : fieldWriters.values()) {
       fieldWriter.write(new IndentingAppendable(appendable), context).append("\n");
     }
-    for (ConstructorWriter constructorWriter : constructorWriters) {
+    for (MethodWriter constructorWriter : constructorWriters) {
       appendable.append('\n');
       if (!isDefaultConstructor(constructorWriter)) {
         constructorWriter.write(new IndentingAppendable(appendable), context);
@@ -110,7 +111,7 @@ public final class ClassWriter extends TypeWriter {
   private static final Set<Modifier> VISIBILIY_MODIFIERS =
       Sets.immutableEnumSet(PUBLIC, PROTECTED, PRIVATE);
 
-  private boolean isDefaultConstructor(ConstructorWriter constructorWriter) {
+  private boolean isDefaultConstructor(MethodWriter constructorWriter) {
     return Sets.intersection(VISIBILIY_MODIFIERS, modifiers)
         .equals(Sets.intersection(VISIBILIY_MODIFIERS, constructorWriter.modifiers))
         && constructorWriter.body().isEmpty();

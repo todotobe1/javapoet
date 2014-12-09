@@ -16,6 +16,7 @@
 package com.squareup.javawriter;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import java.io.IOException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,13 +27,13 @@ import static com.google.common.truth.Truth.assertThat;
 @RunWith(JUnit4.class)
 public final class MethodWriterTest {
   @Test public void empty() {
-    MethodWriter test = new MethodWriter(VoidName.VOID, "test");
+    MethodWriter test = new MethodWriter(Optional.<TypeName>of(VoidName.VOID), "test");
     String actual = Writables.writeToString(test);
     assertThat(actual).isEqualTo("void test() {\n}\n");
   }
 
   @Test public void multilineBody() {
-    MethodWriter test = new MethodWriter(VoidName.VOID, "test");
+    MethodWriter test = new MethodWriter(Optional.<TypeName>of(VoidName.VOID), "test");
     test.body().addSnippet("String firstName;\nString lastName;");
     String actual = Writables.writeToString(test);
     assertThat(actual).isEqualTo(Joiner.on('\n').join(
@@ -43,8 +44,22 @@ public final class MethodWriterTest {
     ));
   }
 
+  @Test public void asConstructor() {
+    MethodWriter test = new MethodWriter(Optional.<TypeName>absent(), "Test");
+    assertThat(Writables.writeToString(test)).isEqualTo("Test() {\n}\n");
+  }
+
+  @Test public void singleTypeParam() {
+    MethodWriter test = new MethodWriter(Optional.<TypeName>of(VoidName.VOID), "test");
+    TypeVariableName tea = TypeVariableName.create("T");
+    test.addTypeVariable(tea);
+    test.addParameter(tea, "teaTime");
+
+    assertThat(Writables.writeToString(test)).isEqualTo("<T> void test(T teaTime) {\n}\n");
+  }
+
   @Test public void singleThrowsTypeName() {
-    MethodWriter method = new MethodWriter(VoidName.VOID, "test");
+    MethodWriter method = new MethodWriter(Optional.<TypeName>of(VoidName.VOID), "test");
     method.addThrowsType(ClassName.fromClass(IOException.class));
 
     assertThat(Writables.writeToString(method)) //
@@ -52,7 +67,7 @@ public final class MethodWriterTest {
   }
 
   @Test public void singleThrowsClass() {
-    MethodWriter method = new MethodWriter(VoidName.VOID, "test");
+    MethodWriter method = new MethodWriter(Optional.<TypeName>of(VoidName.VOID), "test");
     method.addThrowsType(ClassName.fromClass(IOException.class));
 
     assertThat(Writables.writeToString(method)) //
@@ -60,7 +75,7 @@ public final class MethodWriterTest {
   }
 
   @Test public void throwsWithBody() {
-    MethodWriter method = new MethodWriter(PrimitiveName.INT, "test");
+    MethodWriter method = new MethodWriter(Optional.<TypeName>of(PrimitiveName.INT), "test");
     method.addThrowsType(ClassName.fromClass(IOException.class));
     method.body().addSnippet("return 0;");
 
@@ -72,7 +87,7 @@ public final class MethodWriterTest {
   }
 
   @Test public void multipleThrows() {
-    MethodWriter method = new MethodWriter(VoidName.VOID, "test");
+    MethodWriter method = new MethodWriter(Optional.<TypeName>of(VoidName.VOID), "test");
     method.addThrowsType(IOException.class);
     method.addThrowsType(ClassName.create("example", "ExampleException"));
 

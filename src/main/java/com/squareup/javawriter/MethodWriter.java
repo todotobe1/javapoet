@@ -15,6 +15,7 @@
  */
 package com.squareup.javawriter;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -31,13 +32,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public final class MethodWriter extends Modifiable implements HasClassReferences, Writable {
   private final List<TypeVariableName> typeVariables;
-  private final TypeName returnType;
+  private final Optional<TypeName> returnType;
   private final String name;
   private final Map<String, VariableWriter> parameterWriters;
   private final List<ClassName> throwsTypes;
   private BlockWriter body;
 
-  MethodWriter(TypeName returnType, String name) {
+  MethodWriter(Optional<TypeName> returnType, String name) {
     this.typeVariables = Lists.newArrayList();
     this.returnType = returnType;
     this.name = name;
@@ -90,8 +91,10 @@ public final class MethodWriter extends Modifiable implements HasClassReferences
     writeAnnotations(appendable, context);
     writeModifiers(appendable);
     Writables.Joiner.on(", ").wrap("<", "> ").appendTo(appendable, context, typeVariables);
-    returnType.write(appendable, context);
-    appendable.append(' ').append(name).append('(');
+    if (returnType.isPresent()) {
+      returnType.get().write(appendable, context).append(' ');
+    }
+    appendable.append(name).append('(');
     Writables.Joiner.on(", ").appendTo(appendable, context, parameterWriters.values());
     appendable.append(")");
     Writables.Joiner.on(", ").prefix(" throws ").appendTo(appendable, context, throwsTypes);
@@ -109,8 +112,9 @@ public final class MethodWriter extends Modifiable implements HasClassReferences
 
   @Override
   public Set<ClassName> referencedClasses() {
+    @SuppressWarnings("unchecked")
     Iterable<? extends HasClassReferences> concat =
-        Iterables.concat(typeVariables, ImmutableList.of(returnType, body),
+        Iterables.concat(typeVariables, returnType.asSet(), ImmutableList.of(body),
             parameterWriters.values(), throwsTypes);
     return FluentIterable.from(concat)
         .transformAndConcat(GET_REFERENCED_CLASSES)

@@ -70,27 +70,27 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
   }
 
   public MethodWriter addMethod(TypeWriter returnType, String name) {
-    MethodWriter methodWriter = new MethodWriter(returnType.name, name);
+    MethodWriter methodWriter = new MethodWriter(Optional.<TypeName>of(returnType.name), name);
     methodWriters.add(methodWriter);
     return methodWriter;
   }
 
   public MethodWriter addMethod(TypeMirror returnType, String name) {
     MethodWriter methodWriter =
-        new MethodWriter(TypeNames.forTypeMirror(returnType), name);
+        new MethodWriter(Optional.of(TypeNames.forTypeMirror(returnType)), name);
     methodWriters.add(methodWriter);
     return methodWriter;
   }
 
   public MethodWriter addMethod(TypeName returnType, String name) {
-    MethodWriter methodWriter = new MethodWriter(returnType, name);
+    MethodWriter methodWriter = new MethodWriter(Optional.of(returnType), name);
     methodWriters.add(methodWriter);
     return methodWriter;
   }
 
   public MethodWriter addMethod(Class<?> returnType, String name) {
     MethodWriter methodWriter =
-        new MethodWriter(TypeNames.forClass(returnType), name);
+        new MethodWriter(Optional.of(TypeNames.forClass(returnType)), name);
     methodWriters.add(methodWriter);
     return methodWriter;
   }
